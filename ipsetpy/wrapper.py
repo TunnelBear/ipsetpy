@@ -117,12 +117,15 @@ def ipset_send_command_g(*arguments, **kv_arguments):
         _process_error_message(error)
 
 
-def ipset_create_set(set_name, type_name, entry_timeout=None, maxelem=None, set_range=None, 
+def ipset_create_set(set_name, type_name, family=None, entry_timeout=None, maxelem=None, set_range=None, 
                      exist=False, command_timeout=None):
     arguments = ["create", set_name, type_name]
     if set_range:
         arguments.append("range")
         arguments.append("%s" % set_range)
+    if family:
+        arguments.append("family")
+        arguments.append("%s" % family)
     if maxelem:
         arguments.append("maxelem")
         arguments.append("%d" % (int(maxelem),))
