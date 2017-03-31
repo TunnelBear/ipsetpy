@@ -4,6 +4,7 @@ import fcntl
 import os
 import time
 import subprocess
+from threading import Timer
 from .exceptions import *
 
 IPSET_COMMAND = 'ipset'
@@ -32,18 +33,25 @@ def ipset_send_command(*arguments, **kv_arguments):
 
         process = subprocess.Popen((IPSET_COMMAND, ) + arguments, universal_newlines=True,
                                    stderr=subprocess.PIPE, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-
+        
         if command_list:
             for command in command_list:
                 process.stdin.write(command)
 
-        result, error = process.communicate(timeout=command_timeout)
+        def kill(p):
+            p.kill()
+            raise IpsetCommandHangs()
 
-    except subprocess.TimeoutExpired:
-        process.kill()
+        my_timer = Timer(command_timeout, kill, [process])
+        my_timer.start()
+        result, error = process.communicate()
+
+    except IpsetCommandHangs:
         raise IpsetCommandHangs()
     except FileNotFoundError:
         raise IpsetNotFound()
+    finally:
+        my_timer.cancel()
 
     if process.returncode != 0:
         _process_error_message(error)
