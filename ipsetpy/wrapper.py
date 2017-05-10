@@ -28,9 +28,12 @@ def ipset_send_command(*arguments, **kv_arguments):
         if command_timeout is None:
             command_timeout = IPSET_TIMEOUT
 
+        pre_command = (IPSET_COMMAND, )
+        if kv_arguments.get('use_sudo', False):
+            pre_command = ('sudo', IPSET_COMMAND, )
         command_list = kv_arguments.get('command_list', None)
 
-        process = subprocess.Popen((IPSET_COMMAND, ) + arguments, universal_newlines=True,
+        process = subprocess.Popen(pre_command + arguments, universal_newlines=True,
                                    stderr=subprocess.PIPE, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 
         if command_list:
@@ -59,9 +62,12 @@ def ipset_send_command_g(*arguments, **kv_arguments):
         if command_timeout is None:
             command_timeout = IPSET_TIMEOUT
 
+        pre_command = (IPSET_COMMAND, )
+        if kv_arguments.get('use_sudo', False):
+            pre_command = ('sudo', IPSET_COMMAND, )
         command_list = kv_arguments.get('command_list', None)
 
-        process = subprocess.Popen((IPSET_COMMAND, ) + arguments, universal_newlines=True,
+        process = subprocess.Popen(pre_command + arguments, universal_newlines=True,
                                    stderr=subprocess.PIPE, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 
         if command_list:
@@ -137,14 +143,14 @@ def ipset_create_set(set_name, type_name, family=None, entry_timeout=None, maxel
     return ipset_send_command(*arguments, command_timeout=command_timeout)
 
 
-def ipset_add_entry(set_name, entry, entry_timeout=None, exist=False, command_timeout=None):
+def ipset_add_entry(set_name, entry, entry_timeout=None, exist=False, command_timeout=None, use_sudo=False):
     arguments = ["add", set_name, entry]
     if entry_timeout:
         arguments.append("timeout")
         arguments.append("%d" % (int(entry_timeout),))
     if exist:
         arguments.append('-exist')
-    return ipset_send_command(*arguments, command_timeout=command_timeout)
+    return ipset_send_command(*arguments, command_timeout=command_timeout, use_sudo=use_sudo)
 
 
 def ipset_del_entry(set_name, entry, exist=False, command_timeout=None):
